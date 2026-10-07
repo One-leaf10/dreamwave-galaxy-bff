@@ -1,48 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Para Jen</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Para Jen - Eres lo mas importante</title>
 <style>
-  html,body{margin:0;padding:0;background:#07031a;overflow:hidden;height:100%}
-  canvas{position:fixed;top:0;left:0;width:100%;height:100%}
-  h1{position:fixed;top:24px;left:0;width:100%;text-align:center;color:white;font-family:Arial;font-size:22px;font-weight:900;z-index:10;pointer-events:none}
-  h1 span{color:#b6ff6e;display:block;font-size:18px}
-  #pop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(0);background:white;color:#1a0a3a;padding:18px 24px;border-radius:18px;font-family:Arial;font-weight:800;text-align:center;z-index:20;transition:0.3s}
-  #pop.show{transform:translate(-50%,-50%) scale(1)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#07031a;overflow:hidden;height:100vh;width:100vw;font-family:Arial,sans-serif}
+canvas{position:absolute;top:0;left:0}
+#title{position:absolute;top:35px;width:100%;text-align:center;z-index:5;pointer-events:none}
+#title h1{color:white;font-size:28px;font-weight:900;text-shadow:0 0 20px #a855f7}
+#title p{color:#b6ff6e;font-size:16px;font-weight:700;margin-top:4px;text-shadow:0 0 10px #b6ff6e}
+#pop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(0);background:#fff;color:#1a0a3a;padding:20px 28px;border-radius:20px;font-weight:900;font-size:20px;text-align:center;z-index:20;box-shadow:0 0 40px #b6ff6e;transition:0.4s cubic-bezier(.34,1.56,.64,1)}
+#pop.show{transform:translate(-50%,-50%) scale(1)}
+#hint{position:fixed;bottom:25px;width:100%;text-align:center;color:rgba(255,255,255,0.5);font-size:13px;z-index:5;pointer-events:none}
 </style>
 </head>
 <body>
-<h1>Para Jen <span>Dreamwave Galaxy</span></h1>
-<div id="pop">tqm jen</div>
+<div id="title"><h1>Para Jen</h1><p>Dreamwave Galaxy ✨</p></div>
+<div id="pop">tqm jen, eres lo mas importante 💚</div>
+<div id="hint">toca las estrellas ✨</div>
 <canvas id="c"></canvas>
 <script>
-var c=document.getElementById('c');
-var ctx=c.getContext('2d');
-var pop=document.getElementById('pop');
-var w=window.innerWidth, h=window.innerHeight;
-c.width=w; c.height=h;
-window.addEventListener('resize',function(){ w=window.innerWidth; h=window.innerHeight; c.width=w; c.height=h; });
-
-var msgs=["Eres la mejor 💚","Gracias por existir ✨","Mi persona favorita 💫","Siempre cuentas conmigo 🌙","Eres magia pura 💜","tqm jen, eres lo mas importante 💚","Te quiero mucho 🫶","Eres mi estrella favorita ⭐"];
-var stars=[];
-var cols=['#ffeb3b','#40e0ff','#ff4edb','#7eff5c'];
-for(var i=0;i<400;i++){
-  stars.push({x:(Math.random()-0.5)*900, y:(Math.random()-0.5)*900, z:(Math.random()-0.5)*900, col:cols[Math.floor(Math.random()*4)], sz:Math.random()*2+1, msg:msgs[Math.floor(Math.random()*msgs.length)]});
+const c=document.getElementById('c'), x=c.getContext('2d'), pop=document.getElementById('pop');
+let w,h; function R(){w=c.width=innerWidth; h=c.height=innerHeight} R(); addEventListener('resize',R);
+const msgs=["Eres la mejor 💚","Gracias por existir ✨","Mi persona favorita 💫","Siempre cuentas conmigo 🌙","Eres magia pura 💜","tqm jen, eres lo mas importante 💚","Te quiero mucho 🫶","Eres mi estrella favorita ⭐"];
+const stars=[];
+for(let i=0;i<150;i++) stars.push({x:Math.random()*w, y:Math.random()*h, r:Math.random()*2+0.8, col:`hsl(${280+Math.random()*60},100%,70%)`, vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3, tw:Math.random()*5, msg:msgs[i%msgs.length]});
+function draw(){
+requestAnimationFrame(draw);
+x.fillStyle='#07031a'; x.fillRect(0,0,w,h);
+let g=x.createRadialGradient(w/2,h/2,0,w/2,h/2,w); g.addColorStop(0,'#1e0e4a'); g.addColorStop(1,'#07031a'); x.fillStyle=g; x.fillRect(0,0,w,h);
+for(let s of stars){
+s.x+=s.vx; s.y+=s.vy; s.tw+=0.03;
+if(s.x<0||s.x>w) s.vx*=-1; if(s.y<0||s.y>h) s.vy*=-1;
+let alpha=0.6+Math.sin(s.tw)*0.4;
+x.globalAlpha=alpha; x.fillStyle=s.col; x.shadowBlur=15; x.shadowColor=s.col;
+x.beginPath(); x.arc(s.x,s.y,s.r* (1+Math.sin(s.tw)*0.3),0,Math.PI*2); x.fill();
+x.shadowBlur=0; x.strokeStyle=s.col; x.globalAlpha=alpha*0.6; x.lineWidth=0.8;
+x.beginPath(); x.moveTo(s.x-s.r*3,s.y); x.lineTo(s.x+s.r*3,s.y); x.moveTo(s.x,s.y-s.r*3); x.lineTo(s.x,s.y+s.r*3); x.stroke();
 }
-var rx=0, ry=0, down=false, lx=0, ly=0, proj=[];
-
-c.addEventListener('touchstart',function(e){ down=true; lx=e.touches[0].clientX; ly=e.touches[0].clientY; });
-c.addEventListener('touchmove',function(e){ if(!down)return; e.preventDefault(); ry+=(e.touches[0].clientX-lx)*0.005; rx+=(e.touches[0].clientY-ly)*0.005; lx=e.touches[0].clientX; ly=e.touches[0].clientY; },{passive:false});
-c.addEventListener('touchend',function(e){
-  down=false;
-  var t=e.changedTouches[0];
-  var near=null, md=70;
-  for(var k=0;k<proj.length;k++){ var p=proj[k]; var d=Math.hypot(p.sx-t.clientX, p.sy-t.clientY); if(d<md){ md=d; near=p; } }
-  if(near){ pop.textContent=near.msg; pop.classList.add('show'); setTimeout(function(){ pop.classList.remove('show'); },2000); }
-});
-
-function loop(){
-  requestAnimationFrame(loop);
-  ctx.fillStyle='#07031a'; ctx.fillRect(0,
+x.globalAlpha=1;
+}
+draw();
+function touch(e){
+let tx=e.touches?e.touches[0].clientX:e.clientX;
+let ty=e.touches?e.touches[0].clientY:e.clientY;
+let near=null, md=50;
+for(let s of stars){ let d=Math.hypot(s.x-tx, s.y-ty); if(d<md){ md=d; near=s; } }
+if(near){ pop.textContent=near.msg; pop.classList.add('show'); setTimeout(()=>pop.classList.remove('show'),2200); }
+}
+c.addEventListener('click',touch);
+c.addEventListener('touchstart', (e)=>{ e.preventDefault(); touch(e); }, {passive:false});
+pop.classList.add('show'); setTimeout(()=>pop.classList.remove('show'),2500);
+</script>
+</body>
+</html>
