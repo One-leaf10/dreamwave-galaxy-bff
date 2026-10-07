@@ -3,104 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1, user-scalable=no">
-<title>Interactive Dreamwave Galaxy</title>
+<title>Para Jen</title>
 <style>
-  body{margin:0;background:#07031a;overflow:hidden;touch-action:none}
+  body{margin:0;background:#07031a;overflow:hidden;touch-action:none; font-family:system-ui;}
   canvas{display:block}
-  h1{position:absolute;top:30px;width:100%;text-align:center;color:white;font-family:Arial Black; font-size:32px; pointer-events:none;}
-  h1 span{color:#b6ff6e; display:block;}
+  h1{position:absolute;top:30px;width:100%;text-align:center;color:white;font-size:30px;font-weight:800;pointer-events:none;text-shadow:0 0 15px #a855f7;}
+  h1 span{color:#b6ff6e;display:block;}
+.msg{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) scale(0);
+    background:rgba(255,255,255,0.95); color:#1a0a3a; padding:20px 30px; border-radius:20px;
+    font-weight:700; text-align:center; pointer-events:none;
+    transition:0.4s cubic-bezier(.34,1.56,.64,1);
+    box-shadow:0 10px 40px rgba(182,255,110,0.5);
+  }
+.msg.show{transform:translate(-50%,-50%) scale(1);}
+.msg small{display:block; font-weight:400; margin-top:5px; color:#666; font-size:13px;}
 </style>
 </head>
 <body>
-<h1>Interactive <span>Dreamwave Galaxy</span></h1>
+<h1>Para Jen <span>Dreamwave Galaxy</span></h1>
+<div id="popup" class="msg">tqm jen, eres lo más importante 💚<small>toca otra estrella</small></div>
 <canvas id="c"></canvas>
 <script>
 const canvas=document.getElementById('c');
 const ctx=canvas.getContext('2d');
+const popup=document.getElementById('popup');
 let w,h;
 function resize(){ w=canvas.width=innerWidth; h=canvas.height=innerHeight; }
 resize(); window.onresize=resize;
 
+const phrases=[
+  "Eres la mejor 💚",
+  "Gracias por existir ✨",
+  "Mi persona favorita 💫",
+  "Siempre cuentas conmigo 🌙",
+  "Eres magia pura 💜",
+  "tqm jen, eres lo más importante 💚",
+  "Te quiero mucho 🫶",
+  "Eres mi estrella favorita ⭐"
+];
+
 const stars=[];
 const colors=['#ffeb3b','#40e0ff','#ff4edb','#7eff5c'];
-for(let i=0;i<400;i++){
+for(let i=0;i<350;i++){
   stars.push({
-    x:Math.random()*w-w/2,
-    y:Math.random()*h-h/2,
-    z:Math.random()*1000,
+    x:(Math.random()-0.5)*800,
+    y:(Math.random()-0.5)*800,
+    z:(Math.random()-0.5)*800,
     color:colors[Math.floor(Math.random()*4)],
-    size:Math.random()*2+0.5
+    size:Math.random()*2.5+0.8,
+    phrase:phrases[Math.floor(Math.random()*phrases.length)]
   });
 }
 
-let rotX=0, rotY=0, isDown=false, lastX=0, lastY=0, autoRot=0;
-
+let rotX=0, rotY=0, isDown=false, lastX=0, lastY=0;
+function showMsg(text, x, y){
+  popup.innerHTML=text+`<small>toca otra estrella</small>`;
+  popup.style.left=x+'px';
+  popup.style.top=y+'px';
+  popup.classList.add('show');
+  setTimeout(()=>popup.classList.remove('show'), 2000);
+}
 canvas.addEventListener('mousedown',e=>{isDown=true; lastX=e.clientX; lastY=e.clientY});
 canvas.addEventListener('touchstart',e=>{isDown=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY});
-window.addEventListener('mouseup',()=>isDown=false);
-window.addEventListener('touchend',()=>isDown=false);
-window.addEventListener('mousemove',e=>{
-  if(!isDown) return;
-  rotY+=(e.clientX-lastX)*0.005;
-  rotX+=(e.clientY-lastY)*0.005;
-  lastX=e.clientX; lastY=e.clientY;
-});
-window.addEventListener('touchmove',e=>{
-  if(!isDown) return;
-  e.preventDefault();
-  rotY+=(e.touches[0].clientX-lastX)*0.005;
-  rotX+=(e.touches[0].clientY-lastY)*0.005;
-  lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
-},{passive:false});
-
-function draw(){
-  requestAnimationFrame(draw);
-  ctx.fillStyle='#07031a';
-  ctx.fillRect(0,0,w,h);
-
-  if(!isDown) rotY+=0.002;
-
-  // fondo morado
-  let grad=ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,w);
-  grad.addColorStop(0,'#1a0a3a');
-  grad.addColorStop(1,'#07031a');
-  ctx.fillStyle=grad;
-  ctx.fillRect(0,0,w,h);
-
-  stars.forEach(s=>{
-    // rotación 3D simple
-    let cosY=Math.cos(rotY), sinY=Math.sin(rotY);
-    let cosX=Math.cos(rotX), sinX=Math.sin(rotX);
-    let x = s.x*cosY - s.z*sinY;
-    let z = s.x*sinY + s.z*cosY;
-    let y = s.y*cosX - z*sinX;
-    z = s.y*sinX + z*cosX;
-
-    let scale = 600/(600+z);
-    let sx = x*scale + w/2;
-    let sy = y*scale + h/2;
-    if(sx<0||sx>w||sy<0||sy>h||z<-600) return;
-
-    let size = s.size*scale*4;
-    ctx.save();
-    ctx.globalAlpha = Math.min(1, scale);
-    ctx.fillStyle=s.color;
-    ctx.shadowBlur=size*2;
-    ctx.shadowColor=s.color;
-    ctx.beginPath();
-    ctx.arc(sx,sy,size,0,Math.PI*2);
-    ctx.fill();
-    // cruz brillante
-    ctx.strokeStyle=s.color;
-    ctx.lineWidth=0.8;
-    ctx.beginPath();
-    ctx.moveTo(sx-size*1.5,sy); ctx.lineTo(sx+size*1.5,sy);
-    ctx.moveTo(sx,sy-size*1.5); ctx.lineTo(sx,sy+size*1.5);
-    ctx.stroke();
-    ctx.restore();
-  });
-}
-draw();
-</script>
-</body>
-</html>
+window.addEventListener('mouseup',e=>{
+  if(!
