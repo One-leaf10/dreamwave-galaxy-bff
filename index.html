@@ -2,69 +2,47 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Para Jen</title>
 <style>
-  body{margin:0;background:#07031a;overflow:hidden;touch-action:none; font-family:system-ui;}
-  canvas{display:block}
-  h1{position:absolute;top:30px;width:100%;text-align:center;color:white;font-size:30px;font-weight:800;pointer-events:none;text-shadow:0 0 15px #a855f7;}
-  h1 span{color:#b6ff6e;display:block;}
-.msg{
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) scale(0);
-    background:rgba(255,255,255,0.95); color:#1a0a3a; padding:20px 30px; border-radius:20px;
-    font-weight:700; text-align:center; pointer-events:none;
-    transition:0.4s cubic-bezier(.34,1.56,.64,1);
-    box-shadow:0 10px 40px rgba(182,255,110,0.5);
-  }
-.msg.show{transform:translate(-50%,-50%) scale(1);}
-.msg small{display:block; font-weight:400; margin-top:5px; color:#666; font-size:13px;}
+  html,body{margin:0;padding:0;background:#07031a;overflow:hidden;height:100%}
+  canvas{position:fixed;top:0;left:0;width:100%;height:100%}
+  h1{position:fixed;top:24px;left:0;width:100%;text-align:center;color:white;font-family:Arial;font-size:22px;font-weight:900;z-index:10;pointer-events:none}
+  h1 span{color:#b6ff6e;display:block;font-size:18px}
+  #pop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(0);background:white;color:#1a0a3a;padding:18px 24px;border-radius:18px;font-family:Arial;font-weight:800;text-align:center;z-index:20;transition:0.3s}
+  #pop.show{transform:translate(-50%,-50%) scale(1)}
 </style>
 </head>
 <body>
 <h1>Para Jen <span>Dreamwave Galaxy</span></h1>
-<div id="popup" class="msg">tqm jen, eres lo más importante 💚<small>toca otra estrella</small></div>
+<div id="pop">tqm jen</div>
 <canvas id="c"></canvas>
 <script>
-const canvas=document.getElementById('c');
-const ctx=canvas.getContext('2d');
-const popup=document.getElementById('popup');
-let w,h;
-function resize(){ w=canvas.width=innerWidth; h=canvas.height=innerHeight; }
-resize(); window.onresize=resize;
+var c=document.getElementById('c');
+var ctx=c.getContext('2d');
+var pop=document.getElementById('pop');
+var w=window.innerWidth, h=window.innerHeight;
+c.width=w; c.height=h;
+window.addEventListener('resize',function(){ w=window.innerWidth; h=window.innerHeight; c.width=w; c.height=h; });
 
-const phrases=[
-  "Eres la mejor 💚",
-  "Gracias por existir ✨",
-  "Mi persona favorita 💫",
-  "Siempre cuentas conmigo 🌙",
-  "Eres magia pura 💜",
-  "tqm jen, eres lo más importante 💚",
-  "Te quiero mucho 🫶",
-  "Eres mi estrella favorita ⭐"
-];
-
-const stars=[];
-const colors=['#ffeb3b','#40e0ff','#ff4edb','#7eff5c'];
-for(let i=0;i<350;i++){
-  stars.push({
-    x:(Math.random()-0.5)*800,
-    y:(Math.random()-0.5)*800,
-    z:(Math.random()-0.5)*800,
-    color:colors[Math.floor(Math.random()*4)],
-    size:Math.random()*2.5+0.8,
-    phrase:phrases[Math.floor(Math.random()*phrases.length)]
-  });
+var msgs=["Eres la mejor 💚","Gracias por existir ✨","Mi persona favorita 💫","Siempre cuentas conmigo 🌙","Eres magia pura 💜","tqm jen, eres lo mas importante 💚","Te quiero mucho 🫶","Eres mi estrella favorita ⭐"];
+var stars=[];
+var cols=['#ffeb3b','#40e0ff','#ff4edb','#7eff5c'];
+for(var i=0;i<400;i++){
+  stars.push({x:(Math.random()-0.5)*900, y:(Math.random()-0.5)*900, z:(Math.random()-0.5)*900, col:cols[Math.floor(Math.random()*4)], sz:Math.random()*2+1, msg:msgs[Math.floor(Math.random()*msgs.length)]});
 }
+var rx=0, ry=0, down=false, lx=0, ly=0, proj=[];
 
-let rotX=0, rotY=0, isDown=false, lastX=0, lastY=0;
-function showMsg(text, x, y){
-  popup.innerHTML=text+`<small>toca otra estrella</small>`;
-  popup.style.left=x+'px';
-  popup.style.top=y+'px';
-  popup.classList.add('show');
-  setTimeout(()=>popup.classList.remove('show'), 2000);
-}
-canvas.addEventListener('mousedown',e=>{isDown=true; lastX=e.clientX; lastY=e.clientY});
-canvas.addEventListener('touchstart',e=>{isDown=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY});
-window.addEventListener('mouseup',e=>{
-  if(!
+c.addEventListener('touchstart',function(e){ down=true; lx=e.touches[0].clientX; ly=e.touches[0].clientY; });
+c.addEventListener('touchmove',function(e){ if(!down)return; e.preventDefault(); ry+=(e.touches[0].clientX-lx)*0.005; rx+=(e.touches[0].clientY-ly)*0.005; lx=e.touches[0].clientX; ly=e.touches[0].clientY; },{passive:false});
+c.addEventListener('touchend',function(e){
+  down=false;
+  var t=e.changedTouches[0];
+  var near=null, md=70;
+  for(var k=0;k<proj.length;k++){ var p=proj[k]; var d=Math.hypot(p.sx-t.clientX, p.sy-t.clientY); if(d<md){ md=d; near=p; } }
+  if(near){ pop.textContent=near.msg; pop.classList.add('show'); setTimeout(function(){ pop.classList.remove('show'); },2000); }
+});
+
+function loop(){
+  requestAnimationFrame(loop);
+  ctx.fillStyle='#07031a'; ctx.fillRect(0,
